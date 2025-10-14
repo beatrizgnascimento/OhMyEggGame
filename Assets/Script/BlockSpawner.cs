@@ -5,248 +5,128 @@ public class BlockSpawner : MonoBehaviour
 {
     [SerializeField] GameObject harmfulBlockPrefab;
     [SerializeField] GameObject safeBlockPrefab;
-    [SerializeField] float spawnRate = 2f;
+    [SerializeField] float spawnRate = 1.5f;
     [SerializeField] [Range(0, 1)] float safeBlockChance = 0.3f;
-    [SerializeField] float minHorizontalDistance = 2f;
     [SerializeField] Transform background;
-    [SerializeField] float spawnYOffset = -2f;
-    [SerializeField] int maxBlocksInScene = 20;
+    
+    // Controles de spawn
+    [SerializeField] float maxSpawnWidth = 10f; // Largura máxima onde os blocos podem aparecer
+    [SerializeField] float minHorizontalDistance = 1.5f; // Distância mínima horizontal entre blocos
+    [SerializeField] float minVerticalDistance = 2f; // Distância mínima vertical entre blocos
     
     private float minX, maxX, spawnY;
+    private float timer = 0f;
     private List<GameObject> activeBlocks = new List<GameObject>();
-    private float timeSinceLastSpawn = 0f;
-    private Queue<Vector2> pendingSpawnPositions = new Queue<Vector2>();
-    private bool spawnEnabled = true; // Controle global do spawn
 
     void Start()
     {
-        if (background == null)
-        {
-            background = GameObject.Find("Background")?.transform;
-            if (background == null)
-            {
-                Debug.LogError("Background não encontrado! Atribua manualmente no Inspector.");
-                return;
-            }
-        }
-        
-        CalculateBackgroundBounds();
-        Debug.Log($"BlockSpawner iniciado. Background bounds - X: {minX} to {maxX}, SpawnY: {spawnY}");
+        CalculateSpawnBounds();
+        SpawnRandomBlock(); // Primeiro bloco
     }
 
     void Update()
     {
-        if (background == null || !spawnEnabled) return;
-        
-        // Spawn de blocos
-        timeSinceLastSpawn += Time.deltaTime;
-        if (timeSinceLastSpawn >= spawnRate)
-        {
-            TrySpawnBlock();
-            timeSinceLastSpawn = 0f;
-        }
-        
-        // Processar spawns pendentes
-        ProcessPendingSpawns();
-        
-        // Limpar blocos destruídos da lista
+        // Limpa blocos destruídos da lista
         CleanupDestroyedBlocks();
         
-        // DEBUG: Log do estado atual
-        if (Time.frameCount % 60 == 0) // A cada ~1 segundo
+        timer += Time.deltaTime;
+        
+        if (timer >= spawnRate)
         {
-            Debug.Log($"Estado do Spawner - Blocos ativos: {activeBlocks.Count}, Pendentes: {pendingSpawnPositions.Count}, Spawn habilitado: {spawnEnabled}");
+            SpawnRandomBlock();
+            timer = 0f;
         }
     }
 
-    void CalculateBackgroundBounds()
+    void CalculateSpawnBounds()
     {
-        if (background == null) return;
+        if (background == null)
+        {
+            // Usa a largura máxima definida, centralizada na tela
+            minX = -maxSpawnWidth / 2;
+            maxX = maxSpawnWidth / 2;
+            spawnY = -5f;
+            return;
+        }
 
         SpriteRenderer bgRenderer = background.GetComponent<SpriteRenderer>();
-        if (bgRenderer == null)
+        if (bgRenderer != null)
         {
-            Debug.LogError("Background não tem SpriteRenderer!");
-            return;
+            Bounds bgBounds = bgRenderer.bounds;
+            
+            // Limita a largura de spawn ao valor máximo definido
+            float availableWidth = Mathf.Min(bgBounds.size.x - 1f, maxSpawnWidth);
+            minX = bgBounds.center.x - availableWidth / 2;
+            maxX = bgBounds.center.x + availableWidth / 2;
+            
+            spawnY = bgBounds.min.y - 1f;
         }
-
-        Bounds bgBounds = bgRenderer.bounds;
+        else
+        {
+            // Fallback com largura máxima
+            minX = -maxSpawnWidth / 2;
+            maxX = maxSpawnWidth / 2;
+            spawnY = -5f;
+        }
         
-        float margin = 0.5f;
-        minX = bgBounds.min.x + margin;
-        maxX = bgBounds.max.x - margin;
-        
-        spawnY = bgBounds.min.y + spawnYOffset;
+        Debug.Log($"Área de spawn: X({minX} to {maxX}), Y={spawnY}");
     }
 
-    void TrySpawnBlock()
+    void SpawnRandomBlock()
     {
-        // Se já tem muitos blocos, não spawna mais
-        if (activeBlocks.Count >= maxBlocksInScene)
-        {
-            Debug.Log($"Máximo de blocos atingido: {activeBlocks.Count}/{maxBlocksInScene}");
-            return;
-        }
-        
         Vector2 spawnPos = FindValidSpawnPosition();
         
         if (spawnPos != Vector2.zero)
         {
-            // Adiciona à fila de spawns pendentes para processar no próximo frame
-            pendingSpawnPositions.Enqueue(spawnPos);
-            Debug.Log($"Posição válida encontrada: {spawnPos}. Pendentes: {pendingSpawnPositions.Count}");
+            GameObject blockToSpawn = Random.value <= safeBlockChance ? safeBlockPrefab : harmfulBlockPrefab;
+            
+            if (blockToSpawn != null)
+            {
+                GameObject newBlock = Instantiate(blockToSpawn, spawnPos, Quaternion.identity);
+                activeBlocks.Add(newBlock);
+                
+                Debug.Log($"Spawned {blockToSpawn.name} at {spawnPos}");
+            }
         }
         else
         {
-            // Se não encontrou posição válida, tenta uma abordagem mais relaxada
-            Vector2 fallbackPos = FindFallbackSpawnPosition();
-            if (fallbackPos != Vector2.zero)
-            {
-                pendingSpawnPositions.Enqueue(fallbackPos);
-                Debug.Log("Usando posição fallback para spawn");
-            }
-            else
-            {
-                // Mesmo se não encontrar posição, força um spawn em posição aleatória
-                Vector2 forcedPos = new Vector2(Random.Range(minX, maxX), spawnY);
-                pendingSpawnPositions.Enqueue(forcedPos);
-                Debug.LogWarning("Forçando spawn em posição aleatória!");
-            }
-        }
-    }
-
-    void ProcessPendingSpawns()
-    {
-        while (pendingSpawnPositions.Count > 0)
-        {
-            Vector2 spawnPos = pendingSpawnPositions.Dequeue();
-            SpawnBlockAtPosition(spawnPos);
-        }
-    }
-
-    void SpawnBlockAtPosition(Vector2 spawnPos)
-    {
-        GameObject blockToSpawn = Random.value <= safeBlockChance ? safeBlockPrefab : harmfulBlockPrefab;
-        
-        if (blockToSpawn != null)
-        {
-            GameObject newBlock = Instantiate(blockToSpawn, spawnPos, Quaternion.identity);
-            activeBlocks.Add(newBlock);
-            
-            Debug.Log($"Spawned {blockToSpawn.name} at {spawnPos}. Total de blocos ativos: {activeBlocks.Count}");
+            Debug.Log("Não foi possível encontrar posição válida para spawn");
         }
     }
 
     Vector2 FindValidSpawnPosition()
     {
-        // Se não há blocos ativos, qualquer posição é válida
-        if (activeBlocks.Count == 0 && pendingSpawnPositions.Count == 0)
-        {
-            Vector2 randomPos = new Vector2(Random.Range(minX, maxX), spawnY);
-            Debug.Log("Nenhum bloco ativo - spawnando em posição aleatória: " + randomPos);
-            return randomPos;
-        }
-        
-        int maxAttempts = 30;
-        Vector2 spawnPos = Vector2.zero;
-        bool validPositionFound = false;
+        int maxAttempts = 20;
         
         for (int i = 0; i < maxAttempts; i++)
         {
-            spawnPos = new Vector2(Random.Range(minX, maxX), spawnY);
+            Vector2 candidatePos = new Vector2(Random.Range(minX, maxX), spawnY);
             
-            if (IsPositionValid(spawnPos))
+            if (IsPositionValid(candidatePos))
             {
-                validPositionFound = true;
-                break;
+                return candidatePos;
             }
         }
         
-        return validPositionFound ? spawnPos : Vector2.zero;
-    }
-    
-    Vector2 FindFallbackSpawnPosition()
-    {
-        // Abordagem mais relaxada: encontra a posição com MAIOR distância dos blocos existentes
-        int samplePoints = 10;
-        Vector2 bestPosition = Vector2.zero;
-        float maxMinDistance = 0f;
-        
-        for (int i = 0; i < samplePoints; i++)
-        {
-            Vector2 testPos = new Vector2(Random.Range(minX, maxX), spawnY);
-            float minDistance = CalculateMinDistanceToBlocks(testPos);
-            
-            if (minDistance > maxMinDistance)
-            {
-                maxMinDistance = minDistance;
-                bestPosition = testPos;
-            }
-        }
-        
-        // Se encontrou uma posição com alguma distância, usa
-        if (maxMinDistance > 0.5f) // Pelo menos 0.5 unidades de distância
-        {
-            return bestPosition;
-        }
-        
-        return Vector2.zero;
-    }
-    
-    float CalculateMinDistanceToBlocks(Vector2 position)
-    {
-        float minDistance = float.MaxValue;
-        
-        // Verifica blocos ativos
-        foreach (GameObject block in activeBlocks)
-        {
-            if (block == null) continue;
-            
-            float horizontalDistance = Mathf.Abs(position.x - block.transform.position.x);
-            if (horizontalDistance < minDistance)
-            {
-                minDistance = horizontalDistance;
-            }
-        }
-        
-        // Verifica posições pendentes
-        foreach (Vector2 pendingPos in pendingSpawnPositions)
-        {
-            float horizontalDistance = Mathf.Abs(position.x - pendingPos.x);
-            if (horizontalDistance < minDistance)
-            {
-                minDistance = horizontalDistance;
-            }
-        }
-        
-        return minDistance;
+        return Vector2.zero; // Não encontrou posição válida
     }
 
     bool IsPositionValid(Vector2 position)
     {
-        // Se não há blocos ativos nem pendentes, a posição é sempre válida
-        if (activeBlocks.Count == 0 && pendingSpawnPositions.Count == 0)
-            return true;
-        
-        // Verifica se está muito próximo de outros blocos (horizontalmente)
         foreach (GameObject block in activeBlocks)
         {
             if (block == null) continue;
             
-            float horizontalDistance = Mathf.Abs(position.x - block.transform.position.x);
-            if (horizontalDistance < minHorizontalDistance)
+            Vector2 blockPos = block.transform.position;
+            
+            // Calcula distâncias
+            float horizontalDist = Mathf.Abs(position.x - blockPos.x);
+            float verticalDist = Mathf.Abs(position.y - blockPos.y);
+            
+            // Verifica se está muito próximo horizontal E verticalmente
+            if (horizontalDist < minHorizontalDistance && verticalDist < minVerticalDistance)
             {
-                return false;
-            }
-        }
-        
-        // Verifica também posições pendentes
-        foreach (Vector2 pendingPos in pendingSpawnPositions)
-        {
-            float horizontalDistance = Mathf.Abs(position.x - pendingPos.x);
-            if (horizontalDistance < minHorizontalDistance)
-            {
-                return false;
+                return false; // Muito próximo em ambos os eixos
             }
         }
         
@@ -255,7 +135,7 @@ public class BlockSpawner : MonoBehaviour
 
     void CleanupDestroyedBlocks()
     {
-        // Remove blocos nulos (que foram destruídos) da lista
+        // Remove blocos que foram destruídos da lista
         for (int i = activeBlocks.Count - 1; i >= 0; i--)
         {
             if (activeBlocks[i] == null)
@@ -265,52 +145,18 @@ public class BlockSpawner : MonoBehaviour
         }
     }
     
-    // Método público para habilitar/desabilitar o spawn
-    public void SetSpawnEnabled(bool enabled)
-    {
-        spawnEnabled = enabled;
-        Debug.Log($"Spawn habilitado: {enabled}");
-    }
-    
-    // Método para forçar spawn de um bloco (útil para debug)
-    public void ForceSpawnBlock()
-    {
-        Vector2 spawnPos = new Vector2(Random.Range(minX, maxX), spawnY);
-        SpawnBlockAtPosition(spawnPos);
-    }
-    
-    // Visualização no Editor
+    // Visualização no Editor para debug
     void OnDrawGizmosSelected()
     {
-        if (background == null) return;
-        
+        // Desenha a área de spawn
         Gizmos.color = Color.green;
-        Gizmos.DrawLine(new Vector3(minX, spawnY, 0), new Vector3(maxX, spawnY, 0));
+        Gizmos.DrawLine(new Vector3(minX, spawnY - 0.5f, 0), new Vector3(maxX, spawnY - 0.5f, 0));
+        Gizmos.DrawLine(new Vector3(minX, spawnY + 0.5f, 0), new Vector3(maxX, spawnY + 0.5f, 0));
+        Gizmos.DrawLine(new Vector3(minX, spawnY - 0.5f, 0), new Vector3(minX, spawnY + 0.5f, 0));
+        Gizmos.DrawLine(new Vector3(maxX, spawnY - 0.5f, 0), new Vector3(maxX, spawnY + 0.5f, 0));
         
-        SpriteRenderer bgRenderer = background.GetComponent<SpriteRenderer>();
-        if (bgRenderer != null)
-        {
-            Gizmos.color = Color.yellow;
-            Bounds bgBounds = bgRenderer.bounds;
-            Gizmos.DrawWireCube(bgBounds.center, bgBounds.size);
-            
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(new Vector3(minX, bgBounds.min.y, 0), new Vector3(minX, spawnY, 0));
-            Gizmos.DrawLine(new Vector3(maxX, bgBounds.min.y, 0), new Vector3(maxX, spawnY, 0));
-        }
-        
-        // Desenha a área de exclusão ao redor de cada bloco ativo
-        Gizmos.color = new Color(1, 0, 0, 0.3f);
-        foreach (GameObject block in activeBlocks)
-        {
-            if (block != null)
-            {
-                Vector3 blockPos = block.transform.position;
-                Gizmos.DrawWireCube(
-                    new Vector3(blockPos.x, spawnY, 0), 
-                    new Vector3(minHorizontalDistance, 0.5f, 0)
-                );
-            }
-        }
+        // Desenha a largura máxima
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(new Vector3(-maxSpawnWidth/2, spawnY - 1f, 0), new Vector3(maxSpawnWidth/2, spawnY - 1f, 0));
     }
 }
