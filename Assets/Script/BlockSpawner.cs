@@ -21,7 +21,7 @@ public class BlockSpawner : MonoBehaviour
     void Start()
     {
         CalculateSpawnBounds();
-        SpawnRandomBlock(); // Primeiro bloco
+        // SpawnRandomBlock(); // Primeiro bloco
     }
 
     void Update()
