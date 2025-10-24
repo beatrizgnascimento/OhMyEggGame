@@ -6,8 +6,6 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody2D _rigidbody;
     private BoxCollider2D _feet;
     
-    private Animator _animator;
-    
     [SerializeField] float _speed;
     [SerializeField] private float _jumpForce;
 
@@ -17,7 +15,6 @@ public class PlayerMovement : MonoBehaviour
     {
         _rigidbody = GetComponent<Rigidbody2D>();
         _feet = GetComponentInChildren<BoxCollider2D>();
-        _animator = GetComponent<Animator>();
     }
 
     void FixedUpdate()
@@ -25,12 +22,10 @@ public class PlayerMovement : MonoBehaviour
         Move();
         
         var isOnAir = !_feet.IsTouchingLayers(LayerMask.GetMask("Ground"));
-        _animator.SetBool("isOnAir", isOnAir);
 
         if (isOnAir)
         {
             _rigidbody.gravityScale = 10;
-            _animator.SetBool("isWalking", false);
         }
         else
         {
@@ -41,7 +36,6 @@ public class PlayerMovement : MonoBehaviour
     void OnMove(InputValue inputValue)
     {
         _input = inputValue.Get<Vector2>();
-        _animator.SetBool("isWalking", _input.x != 0 || _input.y != 0);
     }
 
     void OnJump(InputValue inputValue)
@@ -65,6 +59,5 @@ public class PlayerMovement : MonoBehaviour
     void Move()
     {
         _rigidbody.linearVelocity = new Vector2(_input.x * (_speed * Time.fixedDeltaTime), _rigidbody.linearVelocity.y);
-        // _input * (_speed * Time.fixedDeltaTime);
     }
 }
