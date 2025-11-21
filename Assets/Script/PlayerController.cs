@@ -1,10 +1,14 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Death Settings")]
     [SerializeField] private float deathYPosition = 10f;
     [SerializeField] private float fallDeathY = -10f;
+    
+    // HashSet para armazenar os blocos que já causaram dano (mais eficiente que List)
+    private HashSet<GameObject> touchedHarmfulBlocks = new HashSet<GameObject>();
     
     void Update()
     {
@@ -23,14 +27,30 @@ public class PlayerController : MonoBehaviour
         
             if(block.Type == BlockController.BlockType.Harmful)
             {
-                Debug.Log("💥 Bloco PERIGOSO - Aplicando dano!");
-                TakeDamage();
+                // Verifica se este bloco específico já foi tocado antes
+                if (!touchedHarmfulBlocks.Contains(collision.gameObject))
+                {
+                    Debug.Log("💥 Bloco PERIGOSO - Aplicando dano pela primeira vez!");
+                    touchedHarmfulBlocks.Add(collision.gameObject); // Marca como tocado
+                    TakeDamage();
+                }
+                else
+                {
+                    Debug.Log("🟡 Bloco PERIGOSO já tocado anteriormente - Dano evitado");
+                }
             }
             else
             {
                 Debug.Log("✅ Bloco SEGURO - Sem dano");
             }
         }
+    }
+
+    // Opcional: método para limpar blocos tocados se necessário (quando mudar de fase, etc.)
+    public void ClearTouchedBlocks()
+    {
+        touchedHarmfulBlocks.Clear();
+        Debug.Log("🧹 Lista de blocos tocados foi limpa");
     }
 
     void TakeDamage()

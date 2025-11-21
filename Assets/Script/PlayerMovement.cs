@@ -40,12 +40,13 @@ public class PlayerMovement : MonoBehaviour
 
     void OnJump(InputValue inputValue)
     {
-        if (!inputValue.isPressed) return;
+        // if (!inputValue.isPressed) return;
         
         var isGrounded = _feet.IsTouchingLayers(LayerMask.GetMask("Ground"));
 
         if (isGrounded)
         {
+            print("Jump");
             _rigidbody.AddForce(Vector2.up * _jumpForce, ForceMode2D.Impulse);
         }
     }
