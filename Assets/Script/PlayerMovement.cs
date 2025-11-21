@@ -25,11 +25,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (isOnAir)
         {
-            _rigidbody.gravityScale = 10;
+            _rigidbody.gravityScale = 7;
         }
         else
         {
-            _rigidbody.gravityScale = 30;
+            _rigidbody.gravityScale = 25;
         }
     }
 
