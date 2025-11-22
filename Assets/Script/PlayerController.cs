@@ -13,10 +13,19 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float flashDuration = 0.3f;
     [SerializeField] private int numberOfFlashes = 3;
     
+    [Header("Player Sprites")]
+    [SerializeField] private Sprite spriteNormal;
+    [SerializeField] private Sprite spritePulando;
+    [SerializeField] private Sprite spriteDano;
+    
     private HashSet<GameObject> touchedHarmfulBlocks = new HashSet<GameObject>();
     private SpriteRenderer spriteRenderer;
     private Color originalColor;
     private bool isFlashing = false;
+    
+    // Mude o enum para PUBLIC
+    public enum PlayerState { Normal, Pulando, Dano }
+    private PlayerState currentState = PlayerState.Normal;
     
     void Awake()
     {
@@ -26,6 +35,7 @@ public class PlayerController : MonoBehaviour
         if (spriteRenderer != null)
         {
             originalColor = spriteRenderer.color;
+            UpdateSprite();
             Debug.Log("✅ SpriteRenderer encontrado no objeto filho");
         }
         else
@@ -73,7 +83,8 @@ public class PlayerController : MonoBehaviour
     {
         Debug.Log("🔴 DANO TOMADO!");
     
-        // Aciona o efeito de piscar
+        SetPlayerState(PlayerState.Dano);
+        
         if (!isFlashing && spriteRenderer != null)
         {
             StartCoroutine(DamageFlash());
@@ -90,28 +101,56 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // Coroutine para o efeito de piscar em vermelho
     IEnumerator DamageFlash()
     {
         isFlashing = true;
         
         for (int i = 0; i < numberOfFlashes; i++)
         {
-            // Muda para cor vermelha
             spriteRenderer.color = damageColor;
-            
             yield return new WaitForSeconds(flashDuration / (numberOfFlashes * 2));
-            
-            // Volta para cor normal
             spriteRenderer.color = originalColor;
-            
             yield return new WaitForSeconds(flashDuration / (numberOfFlashes * 2));
         }
         
-        // Garante que volta à cor original no final
         spriteRenderer.color = originalColor;
         
+        if (currentState == PlayerState.Dano)
+        {
+            SetPlayerState(PlayerState.Normal);
+        }
+        
         isFlashing = false;
+    }
+
+    // Método público para outros scripts
+    public void SetPlayerState(PlayerState newState)
+    {
+        if (currentState == PlayerState.Dano && newState != PlayerState.Dano && isFlashing)
+        {
+            return;
+        }
+        
+        currentState = newState;
+        UpdateSprite();
+    }
+
+    private void UpdateSprite()
+    {
+        if (spriteRenderer == null) return;
+
+        switch (currentState)
+        {
+            case PlayerState.Normal:
+                spriteRenderer.sprite = spriteNormal;
+                break;
+            case PlayerState.Pulando:
+                spriteRenderer.sprite = spritePulando;
+                break;
+            case PlayerState.Dano:
+                spriteRenderer.sprite = spriteDano;
+                break;
+        }
     }
 
     public void ClearTouchedBlocks()
@@ -142,7 +181,6 @@ public class PlayerController : MonoBehaviour
             GameManager.Instance.TakeDamage();
             GameManager.Instance.TakeDamage();
             
-            // Flash para morte no topo também
             if (!isFlashing && spriteRenderer != null)
             {
                 StartCoroutine(DamageFlash());
@@ -158,7 +196,6 @@ public class PlayerController : MonoBehaviour
             GameManager.Instance.TakeDamage();
             GameManager.Instance.TakeDamage();
             
-            // Flash para morte por queda também
             if (!isFlashing && spriteRenderer != null)
             {
                 StartCoroutine(DamageFlash());
