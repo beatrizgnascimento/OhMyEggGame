@@ -17,9 +17,8 @@ public class BlockSpawner : MonoBehaviour
     private float timer = 0f;
     private List<GameObject> activeBlocks = new List<GameObject>();
 
-    // 🟢 Nova fila de tipos de blocos já sorteados (true = safe, false = harmful)
     private Queue<bool> blockTypeQueue = new Queue<bool>();
-    private const int queueSize = 10; // tamanho da fila de pré-sorteios
+    private const int queueSize = 10;
 
     void Start()
     {
@@ -64,11 +63,8 @@ public class BlockSpawner : MonoBehaviour
             maxX = maxSpawnWidth / 2;
             spawnY = -5f;
         }
-
-        Debug.Log($"Área de spawn: X({minX} to {maxX}), Y={spawnY}");
     }
 
-    // 🟢 Preenche a fila com resultados baseados em safeBlockChance
     void PreFillQueue()
     {
         blockTypeQueue.Clear();
@@ -79,7 +75,6 @@ public class BlockSpawner : MonoBehaviour
         }
     }
 
-    // 🟢 Garante que a fila nunca esvazie
     void RefillQueueIfNeeded()
     {
         while (blockTypeQueue.Count < queueSize)
@@ -95,7 +90,7 @@ public class BlockSpawner : MonoBehaviour
             RefillQueueIfNeeded();
 
         bool nextIsSafe = blockTypeQueue.Dequeue();
-        RefillQueueIfNeeded(); // mantém a fila cheia
+        RefillQueueIfNeeded();
 
         Vector2 spawnPos = FindValidSpawnPosition();
 
@@ -103,19 +98,13 @@ public class BlockSpawner : MonoBehaviour
         {
             GameObject prefab = nextIsSafe ? safeBlockPrefab : harmfulBlockPrefab;
 
-            if (prefab != null)
-            {
-                GameObject newBlock = Instantiate(prefab, spawnPos, Quaternion.identity);
-                activeBlocks.Add(newBlock);
-
-                Debug.Log($"Spawned {(nextIsSafe ? "SAFE" : "HARMFUL")} block at {spawnPos}");
-            }
+            if (prefab == null) return;
+            GameObject newBlock = Instantiate(prefab, spawnPos, Quaternion.identity);
+            activeBlocks.Add(newBlock);
         }
         else
         {
-            // ❗ Importante: Se não conseguiu spawnar, devolve o tipo para a fila
             blockTypeQueue.Enqueue(nextIsSafe);
-            Debug.Log("Não foi possível encontrar posição válida — tipo devolvido à fila");
         }
     }
 

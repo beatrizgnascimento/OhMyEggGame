@@ -10,8 +10,8 @@ public class GameManager : MonoBehaviour
     [Header("Health Settings")]
     [SerializeField] private float maxHealth = 100f;
     [SerializeField] private float damageAmount = 20f;
-    [SerializeField] private Slider healthSlider; // ✅ REFERÊNCIA DO SLIDER
-    [SerializeField] private Image healthFill;    // ✅ REFERÊNCIA DA COR
+    [SerializeField] private Slider healthSlider;
+    [SerializeField] private Image healthFill;
     
     private float currentHealth;
     private float survivalTime;
@@ -33,7 +33,7 @@ public class GameManager : MonoBehaviour
     {
         currentHealth = maxHealth;
         isGameOver = false;
-        UpdateHealthUI(); // ✅ INICIALIZA A UI
+        UpdateHealthUI();
     }
 
     void Update()
@@ -46,30 +46,18 @@ public class GameManager : MonoBehaviour
 
     public void TakeDamage()
     {
-        if (isGameOver) 
-        {
-            Debug.Log("⚠️ Já está em Game Over, ignorando dano");
-            return;
-        }
-    
+        if (isGameOver) return; 
+        
         currentHealth -= damageAmount;
-        Debug.Log($"💥 Dano aplicado! Vida: {currentHealth}/{maxHealth}");
     
         UpdateHealthUI();
     
         if (currentHealth <= 0)
         {
             currentHealth = 0;
-            Debug.Log("🎯 Vida chegou a 0! Chamando GameOver...");
             GameOver();
         }
-        else
-        {
-            Debug.Log($"🩸 Vida restante: {currentHealth}");
-        }
     }
-
-    // ✅ MÉTODO NOVO - ATUALIZA A BARRA DE VIDA
     void UpdateHealthUI()
     {
         if (healthSlider != null)
@@ -77,7 +65,6 @@ public class GameManager : MonoBehaviour
             healthSlider.value = currentHealth / maxHealth;
         }
         
-        // ✅ ATUALIZA COR (VERDE → AMARELO → VERMELHO)
         if (healthFill != null)
         {
             if (currentHealth > 50f)
@@ -89,8 +76,6 @@ public class GameManager : MonoBehaviour
                 healthFill.color = Color.Lerp(Color.red, Color.yellow, currentHealth / 50f);
             }
         }
-        
-        Debug.Log($"🩸 Vida: {currentHealth}/{maxHealth} - Slider: {healthSlider?.value}");
     }
 
     public bool IsGameOver()
@@ -100,18 +85,11 @@ public class GameManager : MonoBehaviour
 
     public void GameOver()
     {
-        Debug.Log("🎮 INICIANDO GAME OVER...");
-    
         isGameOver = true;
     
-        // Salva o tempo de sobrevivência
         PlayerPrefs.SetFloat("SurvivalTime", survivalTime);
         PlayerPrefs.Save();
     
-        Debug.Log($"💾 Tempo salvo: {survivalTime} segundos");
-        Debug.Log("🔄 Carregando cena GameOverScene...");
-    
-        // Carrega a cena de Game Over
         SceneManager.LoadScene("Game Over");
     }
 

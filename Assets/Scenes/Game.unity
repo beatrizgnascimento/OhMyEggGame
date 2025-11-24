@@ -906,7 +906,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 4646649027328027380, guid: 2d0c2751898903ee4a24a1bcbf2d529e, type: 3}
+  m_Sprite: {fileID: -2351930650880244005, guid: 53e5357403306fd4982d24fafcd4fc41, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1298,12 +1298,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   harmfulBlockPrefab: {fileID: 2710780062574241534, guid: 72c07d7baeda8fd498d8d32530ba7a10, type: 3}
   safeBlockPrefab: {fileID: 1873031454}
-  spawnRate: 2.5
-  safeBlockChance: 0.5
+  spawnRate: 3
+  safeBlockChance: 0.7
   background: {fileID: 0}
   maxSpawnWidth: 4.75
   minHorizontalDistance: 2
-  minVerticalDistance: 4
+  minVerticalDistance: 5
 --- !u!4 &2028019796
 Transform:
   m_ObjectHideFlags: 0
@@ -1352,7 +1352,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 1
-  m_Mass: 0.7464676
+  m_Mass: 0.47240695
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 30
@@ -1376,7 +1376,7 @@ Transform:
   m_GameObject: {fileID: 2115585763}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -3.034, z: 0}
+  m_LocalPosition: {x: 0, y: -2.47, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1427,7 +1427,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 200
-  _jumpForce: 20
+  _jumpForce: 13
 --- !u!114 &2115585772
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1440,11 +1440,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c9242d764c266a4a9ad155934507ad4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  deathYPosition: 10
-  fallDeathY: -10
+  deathYPosition: 6
+  fallDeathY: -6
   damageColor: {r: 1, g: 0, b: 0, a: 1}
   flashDuration: 0.2
   numberOfFlashes: 2
+  spriteNormal: {fileID: -5557792714167136808, guid: bb42b49d8dea4cf478e9c25b9e4238ac, type: 3}
+  spritePulando: {fileID: -2351930650880244005, guid: 53e5357403306fd4982d24fafcd4fc41, type: 3}
+  spriteDano: {fileID: -6930671154818205808, guid: 06fc32b9524b32e41a33101792c7c451, type: 3}
 --- !u!61 &2115585773
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1479,7 +1482,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.0008417368, y: -0.0023396015}
+  m_Offset: {x: -0.00084874034, y: -0.07840955}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -1489,7 +1492,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.7766634, y: 0.9611211}
+  m_Size: {x: 0.58395296, y: 0.8089812}
   m_EdgeRadius: 0
 --- !u!1 &2123130068
 GameObject:

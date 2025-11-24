@@ -23,24 +23,17 @@ public class PlayerController : MonoBehaviour
     private Color originalColor;
     private bool isFlashing = false;
     
-    // Mude o enum para PUBLIC
     public enum PlayerState { Normal, Pulando, Dano }
     private PlayerState currentState = PlayerState.Normal;
     
     void Awake()
     {
-        // Busca o SpriteRenderer em qualquer objeto filho
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         
         if (spriteRenderer != null)
         {
             originalColor = spriteRenderer.color;
             UpdateSprite();
-            Debug.Log("✅ SpriteRenderer encontrado no objeto filho");
-        }
-        else
-        {
-            Debug.LogError("❌ SpriteRenderer não encontrado em nenhum objeto filho!");
         }
     }
     
@@ -51,38 +44,19 @@ public class PlayerController : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        Debug.Log($"🎯 Colidiu com: {collision.gameObject.name}");
     
         BlockController block = collision.gameObject.GetComponent<BlockController>();
-    
-        if(block != null)
-        {
-            Debug.Log($"📦 Bloco detectado. Tipo: {block.Type}");
+
+        if (block == null) return;
+        if (block.Type != BlockController.BlockType.Harmful) return;
+        if (touchedHarmfulBlocks.Contains(collision.gameObject)) return;
         
-            if(block.Type == BlockController.BlockType.Harmful)
-            {
-                if (!touchedHarmfulBlocks.Contains(collision.gameObject))
-                {
-                    Debug.Log("💥 Bloco PERIGOSO - Aplicando dano pela primeira vez!");
-                    touchedHarmfulBlocks.Add(collision.gameObject);
-                    TakeDamage();
-                }
-                else
-                {
-                    Debug.Log("🟡 Bloco PERIGOSO já tocado anteriormente - Dano evitado");
-                }
-            }
-            else
-            {
-                Debug.Log("✅ Bloco SEGURO - Sem dano");
-            }
-        }
+        touchedHarmfulBlocks.Add(collision.gameObject);
+        TakeDamage();
     }
 
     void TakeDamage()
     {
-        Debug.Log("🔴 DANO TOMADO!");
-    
         SetPlayerState(PlayerState.Dano);
         
         if (!isFlashing && spriteRenderer != null)
@@ -92,12 +66,7 @@ public class PlayerController : MonoBehaviour
     
         if (GameManager.Instance != null)
         {
-            Debug.Log("✅ GameManager encontrado, aplicando dano");
             GameManager.Instance.TakeDamage();
-        }
-        else
-        {
-            Debug.LogError("❌ GameManager Instance é NULL!");
         }
     }
 
@@ -123,7 +92,6 @@ public class PlayerController : MonoBehaviour
         isFlashing = false;
     }
 
-    // Método público para outros scripts
     public void SetPlayerState(PlayerState newState)
     {
         if (currentState == PlayerState.Dano && newState != PlayerState.Dano && isFlashing)
@@ -139,67 +107,55 @@ public class PlayerController : MonoBehaviour
     {
         if (spriteRenderer == null) return;
 
-        switch (currentState)
+        spriteRenderer.sprite = currentState switch
         {
-            case PlayerState.Normal:
-                spriteRenderer.sprite = spriteNormal;
-                break;
-            case PlayerState.Pulando:
-                spriteRenderer.sprite = spritePulando;
-                break;
-            case PlayerState.Dano:
-                spriteRenderer.sprite = spriteDano;
-                break;
-        }
+            PlayerState.Normal => spriteNormal,
+            PlayerState.Pulando => spritePulando,
+            PlayerState.Dano => spriteDano,
+            _ => spriteRenderer.sprite
+        };
     }
 
     public void ClearTouchedBlocks()
     {
         touchedHarmfulBlocks.Clear();
-        Debug.Log("🧹 Lista de blocos tocados foi limpa");
     }
     
     void CheckDeathConditions()
     {
         if (transform.position.y >= deathYPosition)
         {
-            Debug.Log($"☠️ MORTO - Atingiu o topo! Y: {transform.position.y} > {deathYPosition}");
             GameOverByTop();
         }
         else if (transform.position.y <= fallDeathY)
         {
-            Debug.Log($"☠️ MORTO - Caiu demais! Y: {transform.position.y} < {fallDeathY}");
             GameOverByFall();
         }
     }
     
     void GameOverByTop()
     {
-        if (GameManager.Instance != null && !GameManager.Instance.IsGameOver())
-        {
-            Debug.Log("💥 Aplicando dano duplo por morte no topo");
-            GameManager.Instance.TakeDamage();
-            GameManager.Instance.TakeDamage();
+        if (GameManager.Instance == null || GameManager.Instance.IsGameOver()) return;
+        
+        GameManager.Instance.TakeDamage();
+        GameManager.Instance.TakeDamage();
             
-            if (!isFlashing && spriteRenderer != null)
-            {
-                StartCoroutine(DamageFlash());
-            }
+        if (!isFlashing && spriteRenderer != null)
+        {
+            StartCoroutine(DamageFlash());
         }
     }
     
     void GameOverByFall()
     {
-        if (GameManager.Instance != null && !GameManager.Instance.IsGameOver())
-        {
-            Debug.Log("💥 Aplicando dano duplo por queda");
-            GameManager.Instance.TakeDamage();
-            GameManager.Instance.TakeDamage();
+        if (GameManager.Instance == null || GameManager.Instance.IsGameOver()) return;
+        
+        GameManager.Instance.TakeDamage();
+        GameManager.Instance.TakeDamage();
             
-            if (!isFlashing && spriteRenderer != null)
-            {
-                StartCoroutine(DamageFlash());
-            }
+        if (!isFlashing && spriteRenderer != null)
+        {
+            StartCoroutine(DamageFlash());
         }
     }
 }

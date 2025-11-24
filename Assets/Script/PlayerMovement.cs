@@ -70,24 +70,26 @@ public class PlayerMovement : MonoBehaviour
     {
         if (playerController == null) 
         {
-            Debug.LogError("PlayerController não encontrado!");
             return;
         }
 
-        // Se estava no chão e agora está no ar (pulou)
-        if (wasGrounded && !isGrounded)
+        switch (wasGrounded)
         {
-            playerController.SetPlayerState(PlayerController.PlayerState.Pulando);
-        }
-        // Se estava no ar e agora está no chão (aterrissou)
-        else if (!wasGrounded && isGrounded)
-        {
-            playerController.SetPlayerState(PlayerController.PlayerState.Normal);
-        }
-        // Se está no chão e não está se movendo verticalmente
-        else if (isGrounded && Mathf.Abs(_rigidbody.linearVelocity.y) < 0.1f)
-        {
-            playerController.SetPlayerState(PlayerController.PlayerState.Normal);
+            case true when !isGrounded:
+                playerController.SetPlayerState(PlayerController.PlayerState.Pulando);
+                break;
+            case false when isGrounded:
+                playerController.SetPlayerState(PlayerController.PlayerState.Normal);
+                break;
+            default:
+            {
+                if (isGrounded && Mathf.Abs(_rigidbody.linearVelocity.y) < 0.1f)
+                {
+                    playerController.SetPlayerState(PlayerController.PlayerState.Normal);
+                }
+
+                break;
+            }
         }
     }
 }
