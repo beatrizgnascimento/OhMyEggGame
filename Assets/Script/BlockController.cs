@@ -9,8 +9,19 @@ public class BlockController : MonoBehaviour
 
     public BlockType Type => blockType;
 
-    void Update()
+    private Rigidbody2D rb;
+
+    void Awake()
     {
-        transform.Translate(Vector2.up * (_speed * Time.deltaTime));
+        rb = GetComponent<Rigidbody2D>();
+    }
+
+    void FixedUpdate()
+    {
+        float currentSpeed = _speed;
+        
+        currentSpeed *= GameManager.Instance.GlobalSpeedMultiplier;
+        
+        rb.MovePosition(rb.position + Vector2.up * (currentSpeed * Time.fixedDeltaTime));
     }
 }

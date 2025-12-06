@@ -13,6 +13,21 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Slider healthSlider;
     [SerializeField] private Image healthFill;
     
+    [Header("Game Speed Settings")]
+    [SerializeField] private float speedIncreaseRate = 0.05f; 
+    [SerializeField] private float maxSpeedMultiplier = 1.5f; 
+    public float GlobalSpeedMultiplier { get; private set; } = 1f;
+    
+    [Header("Heart Spawn Settings")]
+    [SerializeField] private GameObject heartPrefab;
+    [SerializeField] private float spawnXRange = 2.5f; 
+    [SerializeField] private float minSpawnTime = 3f;
+    [SerializeField] private float maxSpawnTime = 8f;
+
+    private bool hasSpawnedHeart = false;
+    private float heartTimer = 0f;
+    private float targetSpawnTime = 0f;
+    
     private float currentHealth;
     private float survivalTime;
     private bool isGameOver;
@@ -41,6 +56,12 @@ public class GameManager : MonoBehaviour
         if (!isGameOver)
         {
             survivalTime += Time.deltaTime;
+            
+            float calculatedSpeed = 1f + (survivalTime * speedIncreaseRate);
+
+            GlobalSpeedMultiplier = Mathf.Min(calculatedSpeed, maxSpeedMultiplier);
+            
+            HandleHeartSpawning();
         }
     }
 
@@ -91,6 +112,51 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.Save();
     
         SceneManager.LoadScene("Game Over");
+    }
+    
+    void HandleHeartSpawning()
+    {
+        // Reset the condition if player is fully healed
+        if (currentHealth >= maxHealth)
+        {
+            hasSpawnedHeart = false;
+            heartTimer = 0f;
+            return;
+        }
+
+        // Check if HP is 40% or less
+        if (currentHealth <= (maxHealth * 0.4f) && !hasSpawnedHeart)
+        {
+            // Initialize the random target time if starting the timer
+            if (heartTimer == 0f)
+            {
+                targetSpawnTime = Random.Range(minSpawnTime, maxSpawnTime);
+            }
+
+            heartTimer += Time.deltaTime;
+
+            if (heartTimer >= targetSpawnTime)
+            {
+                SpawnHeart();
+                hasSpawnedHeart = true;
+            }
+        }
+    }
+
+    void SpawnHeart()
+    {
+        if (heartPrefab != null)
+        {
+            float randomX = Random.Range(-spawnXRange, spawnXRange);
+            Vector2 spawnPos = new Vector2(randomX, 10f); // Spawn above the screen
+            Instantiate(heartPrefab, spawnPos, Quaternion.identity);
+        }
+    }
+
+    public void HealFull()
+    {
+        currentHealth = maxHealth;
+        UpdateHealthUI();
     }
 
     public void RestartGame()

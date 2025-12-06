@@ -1335,7 +1335,7 @@ GameObject:
   - component: {fileID: 2115585773}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1427,7 +1427,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 200
-  _jumpForce: 13
+  _jumpForce: 12
+  _extraJumpForce: 10
+  _maxExtraJumps: 1
 --- !u!114 &2115585772
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1527,6 +1529,12 @@ MonoBehaviour:
   damageAmount: 20
   healthSlider: {fileID: 1308207854}
   healthFill: {fileID: 638192500}
+  speedIncreaseRate: 0.05
+  maxSpeedMultiplier: 4
+  heartPrefab: {fileID: 5460349367277673931, guid: 79efeb5b268b310eca6fb934efda7df8, type: 3}
+  spawnXRange: 2.5
+  minSpawnTime: 3
+  maxSpawnTime: 8
 --- !u!4 &2123130070
 Transform:
   m_ObjectHideFlags: 0
@@ -1697,10 +1705,6 @@ PrefabInstance:
     - target: {fileID: 7889458713656131861, guid: 6188252aaac275246ba86b8f4f56d57e, type: 3}
       propertyPath: m_Name
       value: Grass
-      objectReference: {fileID: 0}
-    - target: {fileID: 7889458713656131861, guid: 6188252aaac275246ba86b8f4f56d57e, type: 3}
-      propertyPath: m_Layer
-      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

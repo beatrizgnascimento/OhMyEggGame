@@ -15,7 +15,10 @@ public class ScrollingBackground : MonoBehaviour
 
     void Update()
     {
-        _offset.y -= _speed * Time.deltaTime;
-        _material.mainTextureOffset = _offset;
-    }
+        float currentSpeed = _speed;
+        
+        currentSpeed *= GameManager.Instance.GlobalSpeedMultiplier;
+
+        _offset.y -= currentSpeed * Time.deltaTime;
+        _material.mainTextureOffset = _offset;    }
 }

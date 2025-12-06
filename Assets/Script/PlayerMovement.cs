@@ -8,11 +8,14 @@ public class PlayerMovement : MonoBehaviour
     
     [SerializeField] float _speed;
     [SerializeField] private float _jumpForce;
+    [SerializeField] private float _extraJumpForce;
+    [SerializeField] private int _maxExtraJumps = 1;
 
     private Vector2 _input;
     private PlayerController playerController;
     private bool isGrounded = false;
     private bool wasGrounded = true;
+    private int _extraJumpsCount = 0;
 
     void Awake()
     {
@@ -26,6 +29,11 @@ public class PlayerMovement : MonoBehaviour
         Move();
         
         isGrounded = _feet.IsTouchingLayers(LayerMask.GetMask("Ground"));
+
+        if (isGrounded)
+        {
+            _extraJumpsCount = 0;
+        }
 
         if (!isGrounded)
         {
@@ -48,10 +56,25 @@ public class PlayerMovement : MonoBehaviour
 
     void OnJump(InputValue inputValue)
     {
-        if (inputValue.isPressed && isGrounded)
+        if (inputValue.isPressed)
         {
-            print("Jump");
-            _rigidbody.AddForce(Vector2.up * _jumpForce, ForceMode2D.Impulse);
+            if (isGrounded)
+            {
+                _rigidbody.AddForce(Vector2.up * _jumpForce, ForceMode2D.Impulse);
+            }
+            else if (_extraJumpsCount < _maxExtraJumps)
+            {
+                _extraJumpsCount++;
+                
+                _rigidbody.linearVelocity = new Vector2(_rigidbody.linearVelocity.x, 0);
+                
+                _rigidbody.AddForce(Vector2.up * _extraJumpForce, ForceMode2D.Impulse);
+
+                if (playerController is not null)
+                {
+                    playerController.SetPlayerState(PlayerController.PlayerState.Pulando);
+                }
+            }
         }
     }
 

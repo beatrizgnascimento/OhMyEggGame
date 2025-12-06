@@ -84,12 +84,12 @@ public class PlayerController : MonoBehaviour
         
         spriteRenderer.color = originalColor;
         
+        isFlashing = false;
+        
         if (currentState == PlayerState.Dano)
         {
             SetPlayerState(PlayerState.Normal);
         }
-        
-        isFlashing = false;
     }
 
     public void SetPlayerState(PlayerState newState)

@@ -25,13 +25,17 @@ public class BlockSpawner : MonoBehaviour
         CalculateSpawnBounds();
         PreFillQueue();
     }
-
+    
     void Update()
     {
         CleanupDestroyedBlocks();
         timer += Time.deltaTime;
         
-        if (timer >= spawnRate)
+        float currentSpawnRate = spawnRate;
+        
+        currentSpawnRate /= GameManager.Instance.GlobalSpeedMultiplier;
+        
+        if (timer >= currentSpawnRate)
         {
             SpawnFromQueue();
             timer = 0f;
