@@ -85,18 +85,6 @@ public class GameManager : MonoBehaviour
         {
             healthSlider.value = currentHealth / maxHealth;
         }
-        
-        if (healthFill != null)
-        {
-            if (currentHealth > 50f)
-            {
-                healthFill.color = Color.Lerp(Color.yellow, Color.green, (currentHealth - 50f) / 50f);
-            }
-            else
-            {
-                healthFill.color = Color.Lerp(Color.red, Color.yellow, currentHealth / 50f);
-            }
-        }
     }
 
     public bool IsGameOver()
